@@ -1,4 +1,12 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+    images: {
+        remotePatterns: [
+            {
+                hostname: 'quirky-ibex-748.convex.cloud',
+            },
+        ],
+    },
+};
 
 export default nextConfig;

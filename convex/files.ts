@@ -63,9 +63,58 @@ export const generateUploadUrl = mutation({
 
 
 
-// export const saveSongStorageId = mutation({
-//     args:{
-//      songStorageId : v.id("_storage"),
-//      title :v.string(),
-//     },
-// });
+export const saveSongStorageId = mutation({
+    // You can customize these as you like
+    args: {
+        songStorageId: v.id("_storage"),
+        title: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new ConvexError("Unauthorized");
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) =>
+                q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) {
+            throw new ConvexError("User not found.");
+        }
+
+        // Save the storageId to the database using `insert`
+
+        return await ctx.db.insert("files", {
+            song: args.songStorageId,
+            ownerId: user._id,
+            title: args.title,
+        });
+    },
+});
+export const saveImageStorageId = mutation({
+    args: {
+        imageStorageId: v.id("_storage"),
+        id: v.id("files"),
+    },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+        if (!identity) throw new ConvexError("Unauthorized");
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) =>
+                q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) {
+            throw new ConvexError("User not found.");
+        }
+
+        // Save the storageId to the database using `update`
+
+        return await ctx.db.patch(args.id, {
+            image: args.imageStorageId,
+        });
+    },
+});
