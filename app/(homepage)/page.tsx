@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Heart, Play } from "lucide-react";
 import Image from "next/image";
 import { FileWithUrls } from "@/types";
-// import AudioPlayer from "@/components/audio-player";
+import AudioPlayer from "@/components/audio-player";
 import { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 
@@ -121,7 +121,7 @@ const Home = () => {
                     ))}
                 </div>
             </div>
-            {/* {fileId && currentSong &&
+            {fileId && currentSong &&
                 <AudioPlayer
                     id={fileId}
                     title={title}
@@ -130,7 +130,7 @@ const Home = () => {
                     songUrl={currentSong}
                     handleNext={handleNext}
                     handlePrevious={handlePrevious}
-                />} */}
+                />}
         </div>
     );
 

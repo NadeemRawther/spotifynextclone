@@ -118,3 +118,114 @@ export const saveImageStorageId = mutation({
         });
     },
 });
+
+export const getFavorite = query({
+    args: { id: v.id("files") },
+    handler: async (ctx, { id }) => {
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const user = await ctx.db
+            .query("users")
+            .withIndex("by_token", (q) =>
+                q.eq("tokenIdentifier", identity.tokenIdentifier))
+            .unique();
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        const existingFavorite = await ctx.db
+            .query("userFavorites")
+            .withIndex("by_user_file", (q) =>
+                q
+                    .eq("userId", user._id)
+                    .eq("fileId", id)
+            )
+            .unique();
+
+        return !!existingFavorite;
+    },
+});
+
+export const favorite = mutation({
+    args: { id: v.id("files") },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const file = await ctx.db.get(args.id);
+
+        if (!file) {
+            throw new Error("File not found");
+        }
+
+        const userId = file.ownerId;
+
+        const existingFavorite = await ctx.db
+            .query("userFavorites")
+            .withIndex("by_user_file", (q) =>
+                q
+                    .eq("userId", userId)
+                    .eq("fileId", file._id)
+            )
+            .unique();
+
+        if (existingFavorite) {
+            throw new Error("File already favorited");
+        }
+
+        await ctx.db.insert("userFavorites", {
+            userId,
+            fileId: file._id,
+        });
+
+        return file;
+    },
+});
+
+
+
+export const unfavorite = mutation({
+    args: { id: v.id("files") },
+    handler: async (ctx, args) => {
+        const identity = await ctx.auth.getUserIdentity();
+
+        if (!identity) {
+            throw new Error("Unauthorized");
+        }
+
+        const file = await ctx.db.get(args.id);
+
+        if (!file) {
+            throw new Error("File not found");
+        }
+
+        const userId = file.ownerId;
+
+        const existingFavorite = await ctx.db
+            .query("userFavorites")
+            .withIndex("by_user_file", (q) =>
+                q
+                    .eq("userId", userId)
+                    .eq("fileId", file._id)
+            )
+            .unique();
+
+        if (!existingFavorite) {
+            throw new Error("Favorited file not found");
+        }
+
+        await ctx.db.delete(existingFavorite._id);
+
+        return file;
+    },
+});
+
+
